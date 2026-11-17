@@ -3,7 +3,7 @@
 A small Netlify site for off-site shoot equipment requests.
 
 1. The requester fills in the shoot dates, cinematographers, and equipment (searchable list of items and kits from CheqRoom).
-2. A Netlify Function checks the request, builds a PDF, and emails it to the main cinematographer (and optionally the equipment manager).
+2. A Netlify Function checks the request and builds a PDF. The confirmation page lets the requester download it or open it to print. Nothing is emailed.
 3. The requester posts the PDF in Slack with their dates. Your equipment manager enters the reservation in CheqRoom from the PDF.
 
 There is no database to run. The equipment list is uploaded on a passcode-protected page in the site itself and stored with the site (Netlify Blobs, built in).
@@ -13,7 +13,7 @@ There is no database to run. The equipment list is uploaded on a passcode-protec
 | Path | What it does |
 | --- | --- |
 | `public/index.html` | The form (one file, no framework) |
-| `netlify/functions/submit.js` | Receives the form, builds the PDF, sends the email |
+| `netlify/functions/submit.js` | Receives the form, builds the PDF and returns it to the browser |
 | `netlify/functions/inventory.js` | Serves the current equipment list to the form |
 | `public/admin.html` | The update page (passcode, upload, review changes, publish, go back) |
 | `netlify/functions/admin-inventory.js` | Checks the passcode and saves the uploaded list |
@@ -37,11 +37,7 @@ Columns are matched by header name, ignoring case and spacing: `Name` (or `Item`
 - CheqRoom sub-categories written as `Lens/Zoom>24-70mm` show as the category "Lens" with "Zoom / 24-70mm" under the item.
 - **Kits:** items that share a `Kit Name` become one kit. Kits show first in the list with a Kit label, are searchable by kit name and by what's inside, and can only be requested whole. The PDF lists what each kit contains. CheqRoom's help pages describe kits being assigned through a Kit Name column on import. Check that your export includes that column.
 
-### 3. Set up email (Resend)
-
-The function sends mail through [Resend](https://resend.com). Create an account, verify the sending domain (for example goldenhippo.com), and create an API key. To use a different provider, replace the `sendEmail` function in `netlify/functions/submit.js`.
-
-### 4. Deploy
+### 3. Deploy
 
 Connect the repo to Netlify (build settings come from `netlify.toml`), or from this folder run:
 
@@ -52,16 +48,13 @@ npx netlify deploy --prod --build
 
 Drag-and-drop deploys aren't a good fit because the functions need to be bundled.
 
-### 5. Environment variables
+### 4. Environment variables
 
 Set these in Netlify under Site configuration, Environment variables:
 
 | Variable | Required | Notes |
 | --- | --- | --- |
-| `RESEND_API_KEY` | Yes | From Resend |
-| `FROM_EMAIL` | Yes | A sender on your verified domain, for example `Equipment Requests <equipment@goldenhippo.com>` |
 | `ADMIN_PASSCODE` | Yes | Unlocks the update page. Without it the page refuses all requests. |
-| `EQUIPMENT_MANAGER_EMAIL` | No | Gets a copy of every request, and replies go to this address |
 | `ALLOWED_EMAIL_DOMAIN` | No | Defaults to `goldenhippo.com` |
 
 ## Updating the equipment list (for the coordinator)
@@ -93,7 +86,8 @@ LIST_STORE_DIR=./.list-store ADMIN_PASSCODE=test node <your test server>
 - The upload and passcode flow was tested locally against a file-based store. Saving to Netlify Blobs itself hasn't been run against a real Netlify site, so do one test upload after the first deploy.
 - The passcode is a single shared one. It is sent with each request over HTTPS and kept in the browser tab only until it closes.
 
-- Anyone with the form link can submit a request. Emails only go to `@goldenhippo.com` addresses and a hidden field catches basic bots, but the form has no login. If that matters, put the site behind Netlify's password protection or your SSO.
+- Anyone with the form link can submit a request. The main cinematographer's address must be `@goldenhippo.com` and a hidden field catches basic bots, but the form has no login. If that matters, put the site behind Netlify's password protection or your SSO.
 - The "in inventory" number is how many units you own, not availability on the requested dates. Your equipment manager still checks availability in CheqRoom.
 - Items inside a kit also appear on their own, because CheqRoom allows booking them separately. A request can include both a kit and one of its parts. The equipment manager sorts that out.
+- Nothing is emailed or stored. The PDF exists only on the confirmation page, so a requester who closes it without saving has to submit again. Requests aren't logged anywhere.
 - The PDF uses a standard font, so characters outside Latin-1 (emoji, non-Latin scripts) print as `?`.

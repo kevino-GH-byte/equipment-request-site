@@ -199,7 +199,7 @@
 
 <main class="container">
   <h1>Request equipment for your shoot</h1>
-  <p class="lead">Fill this out for each off-site shoot. We email you a PDF copy to post in Slack with your proposed dates.</p>
+  <p class="lead">Fill this out for each off-site shoot. You get a PDF to download and post in Slack with your proposed dates.</p>
 
   <form id="form" novalidate autocomplete="off">
     <div id="errors" class="errors" role="alert" tabindex="-1" hidden></div>
@@ -234,7 +234,7 @@
 
     <section class="card" aria-labelledby="h-crew">
       <h2 id="h-crew">Cinematographers</h2>
-      <p class="hint">The main cinematographer gets the PDF by email.</p>
+      <p class="hint">The main cinematographer is named on the PDF.</p>
       <div class="grid cols-3">
         <div class="field">
           <label for="mainFirst">Main cinematographer first name</label>
@@ -295,7 +295,7 @@
       <a class="btn btn-primary" id="dlPdf" href="#">Download PDF</a>
       <a class="btn" id="openPdf" href="#" target="_blank" rel="noopener">Open to print</a>
     </div>
-    <p class="hint" id="doneHint" hidden>Your copy is also in your email. Keep it handy for the Slack post.</p>
+    <p class="hint" id="doneHint" hidden>Save it now. This page is the only place you get the PDF.</p>
     <button type="button" class="btn" id="again">Start another request</button>
   </section>
 </main>
@@ -609,10 +609,8 @@
           return;
         }
         $("#form").hidden = true;
-        $("#doneTitle").textContent = r.data.ref ? "Request " + r.data.ref + " sent" : "Request sent";
-        $("#doneBody").textContent = r.data.sentTo
-          ? "We emailed a PDF copy to " + r.data.sentTo + ". Post it in the equipment Slack channel with your proposed dates so they can be approved."
-          : "Your request was submitted.";
+        $("#doneTitle").textContent = r.data.ref ? "Request " + r.data.ref + " is ready" : "Request is ready";
+        $("#doneBody").textContent = "Download the PDF below, then post it in the equipment Slack channel with your proposed dates so they can be approved.";
         setupPdf(r.data);
         $("#done").hidden = false;
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -626,9 +624,12 @@
       });
   });
 
-  // The server sends the same PDF it emailed, so the person can save or print it straight away.
+  // The server builds the PDF and sends it back so the person can save or print it right away.
   function setupPdf(data) {
-    if (!data.pdf) return;
+    if (!data.pdf) {
+      $("#doneBody").textContent = "Your request was created, but the PDF didn’t come through. Go back and submit again.";
+      return;
+    }
     try {
       var bin = atob(data.pdf), bytes = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
@@ -639,7 +640,9 @@
       $("#openPdf").href = url;
       $("#doneActions").hidden = false;
       $("#doneHint").hidden = false;
-    } catch (e) { /* the emailed copy still works */ }
+    } catch (e) {
+      $("#doneBody").textContent = "Your request was created, but this browser couldn’t prepare the PDF. Go back and submit again.";
+    }
   }
 
   $("#again").addEventListener("click", function () { window.location.reload(); });
