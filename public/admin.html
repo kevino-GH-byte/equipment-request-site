@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Update Equipment List | Golden Hippo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gh-yellow-500: #edbf26; --gh-yellow-400: #f3cf57; --gh-yellow-100: #fdf4d4; --gh-yellow-50: #fefaeb;
+    --gh-ink-900: #0f1115; --gh-ink-700: #2a2f3a; --gh-ink-500: #5b6373; --gh-ink-300: #c5cad3;
+    --gh-ink-100: #eef0f4; --gh-ink-50: #f7f8fa; --gh-white: #ffffff;
+    --danger: #b42318; --danger-50: #fef3f2; --ok: #1a6b3a;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 15px; line-height: 1.6; color: var(--gh-ink-900); background: var(--gh-ink-50);
+  }
+  .band { height: 6px; background: var(--gh-yellow-500); }
+  .site-header { background: var(--gh-ink-900); }
+  .site-header .inner {
+    max-width: 880px; margin: 0 auto; padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .site-header img { height: 48px; width: auto; display: block; }
+  .site-header .tag { color: var(--gh-white); font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  .container { max-width: 880px; margin: 0 auto; padding: 56px 20px 48px; }
+  h1 { font-size: clamp(28px, 4vw, 38px); line-height: 1.15; letter-spacing: -.01em; font-weight: 700; margin: 0 0 12px; text-wrap: balance; }
+  h2 { font-size: 20px; line-height: 1.3; font-weight: 600; margin: 0 0 4px; }
+  .lead { color: var(--gh-ink-700); margin: 0 0 40px; max-width: 62ch; }
+  .card {
+    background: var(--gh-white); border: 1px solid var(--gh-ink-300); border-radius: 12px;
+    padding: 24px; margin: 0 0 32px; box-shadow: 0 1px 2px rgba(15, 17, 21, .04);
+  }
+  .hint { color: var(--gh-ink-500); font-size: 13px; margin: 0 0 16px; }
+  label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  input[type=password], input[type=file] {
+    width: 100%; font: inherit; font-size: 15px; color: var(--gh-ink-900); background: var(--gh-white);
+    border: 1px solid var(--gh-ink-300); border-radius: 8px; padding: 10px 12px; min-height: 44px;
+  }
+  input:focus, button:focus-visible, summary:focus-visible {
+    outline: none; border-color: var(--gh-ink-900); box-shadow: 0 0 0 3px rgba(237, 191, 38, .45);
+  }
+  .btn {
+    font: inherit; font-weight: 600; font-size: 15px; line-height: 1.2; border-radius: 8px; padding: 12px 20px; cursor: pointer;
+    border: 1px solid var(--gh-ink-300); background: var(--gh-white); color: var(--gh-ink-900);
+  }
+  .btn:hover { border-color: var(--gh-ink-500); }
+  .btn[disabled] { opacity: .55; cursor: default; }
+  .btn-primary { background: var(--gh-yellow-500); border-color: var(--gh-yellow-500); }
+  .btn-primary:hover { background: var(--gh-yellow-400); border-color: var(--gh-yellow-400); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } .container { padding-top: 40px; } }
+  .stat { background: var(--gh-ink-50); border: 1px solid var(--gh-ink-100); border-radius: 8px; padding: 12px 14px; }
+  .stat b { display: block; font-size: 24px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 12px; color: var(--gh-ink-500); text-transform: uppercase; letter-spacing: .08em; }
+  .callout { border-left: 4px solid var(--gh-yellow-500); background: var(--gh-yellow-50); padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout p { margin: 0; } .callout p + p { margin-top: 6px; }
+  .callout.error { border-left-color: var(--danger); background: var(--danger-50); color: var(--danger); }
+  .callout.good { border-left-color: var(--ok); }
+  ol.steps { margin: 0 0 20px; padding-left: 20px; color: var(--gh-ink-700); }
+  ol.steps li { margin-bottom: 4px; }
+  details { border: 1px solid var(--gh-ink-100); border-radius: 8px; padding: 8px 14px; margin: 8px 0; background: var(--gh-white); }
+  summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+  details ul { margin: 8px 0 4px; padding-left: 18px; max-height: 220px; overflow: auto; font-size: 14px; }
+  .muted { color: var(--gh-ink-500); font-size: 13px; }
+  ul.warn { margin: 0; padding-left: 18px; }
+  footer { max-width: 880px; margin: 0 auto; padding: 0 20px 48px; color: var(--gh-ink-500); font-size: 13px; }
+  footer a, .container a { color: inherit; text-decoration: underline; text-decoration-color: var(--gh-yellow-500); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="band"></div>
+<header class="site-header">
+  <div class="inner">
+    <img src="assets/logo-wordmark.webp" alt="Golden Hippo">
+    <span class="tag">Equipment list</span>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Update the equipment list</h1>
+  <p class="lead">Upload an export from CheqRoom and the request form uses it right away. You'll see what changed before anything goes live, and you can go back to the previous list.</p>
+
+  <section class="card" id="lockCard" aria-labelledby="lockTitle">
+    <h2 id="lockTitle">Passcode</h2>
+    <p class="hint">Only the equipment manager and coordinator have this.</p>
+    <form id="lockForm" autocomplete="off">
+      <label for="passcode">Passcode</label>
+      <div class="row">
+        <input id="passcode" type="password" style="flex:1 1 220px; width:auto" autocomplete="current-password">
+        <button class="btn btn-primary" type="submit" id="unlock">Unlock</button>
+      </div>
+    </form>
+    <div class="callout error" id="lockError" role="alert" hidden><p></p></div>
+  </section>
+
+  <div id="app" hidden>
+    <section class="card" aria-labelledby="curTitle">
+      <h2 id="curTitle">List in use now</h2>
+      <p class="hint" id="curSource"></p>
+      <div class="stats" id="curStats"></div>
+      <div class="row" id="restoreRow" hidden>
+        <button class="btn" type="button" id="restore">Go back to the previous list</button>
+        <span class="muted" id="prevInfo"></span>
+      </div>
+      <div class="callout error" id="restoreError" role="alert" hidden><p></p></div>
+    </section>
+
+    <section class="card" aria-labelledby="upTitle">
+      <h2 id="upTitle">Upload a new export</h2>
+      <p class="hint">Replaces the whole list. Include every item, not just what changed.</p>
+      <ol class="steps">
+        <li>Export your items from CheqRoom as a CSV or Excel file.</li>
+        <li>Make sure the columns include Name, Category, and Kit Name (if you use kits). Brand, Model, Code, and Status are used if present.</li>
+        <li>Choose the file below. You'll review it before it goes live.</li>
+      </ol>
+      <label for="file">Export file (.csv or .xlsx)</label>
+      <input id="file" type="file" accept=".csv,.xlsx,.xls,text/csv">
+      <div class="callout error" id="fileError" role="alert" hidden><p></p></div>
+      <p class="muted" id="working" role="status" hidden>Reading the file…</p>
+    </section>
+
+    <section class="card" id="reviewCard" aria-labelledby="revTitle" hidden>
+      <h2 id="revTitle">Review before publishing</h2>
+      <p class="hint" id="revFile"></p>
+      <div class="stats" id="newStats"></div>
+      <div id="warnings"></div>
+      <div id="diff"></div>
+      <div class="row" style="margin-top:20px">
+        <button class="btn btn-primary" type="button" id="publish">Publish this list</button>
+        <button class="btn" type="button" id="cancel">Cancel</button>
+      </div>
+      <div class="callout error" id="pubError" role="alert" hidden><p></p></div>
+    </section>
+
+    <div class="callout good" id="doneBox" role="status" hidden>
+      <p><strong>Published.</strong> The request form is now using the new list.</p>
+      <p><a href="index.html" id="formLink">Open the request form</a> to check it.</p>
+    </div>
+  </div>
+</main>
+
+<footer>Golden Hippo · Internal use · <a href="index.html" id="backLink">Back to the request form</a></footer>
+
+<script>
+(function () {
+  "use strict";
+  var ENDPOINT = "/.netlify/functions/admin-inventory";
+  var XLSX_URL = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+  var $ = function (s) { return document.querySelector(s); };
+  var pass = "";
+  var pending = null; // { csv, filename }
+
+  function show(el, on) { el.hidden = !on; }
+  function say(box, msg) { box.querySelector("p").textContent = msg; show(box, !!msg); }
+  function fmtDate(iso) {
+    if (!iso) return "";
+    return new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+  }
+  function n(x) { return Number(x).toLocaleString("en-US"); }
+
+  function api(action, extra) {
+    var body = { action: action };
+    for (var k in extra) body[k] = extra[k];
+    return fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-passcode": pass },
+      body: JSON.stringify(body)
+    }).then(function (res) {
+      return res.json().catch(function () { return { error: "The server sent back something unexpected." }; })
+        .then(function (data) { return { ok: res.ok, status: res.status, data: data }; });
+    }, function () {
+      return { ok: false, status: 0, data: { error: "Couldn't reach the server. Check your connection and try again." } };
+    });
+  }
+
+  function statsHtml(m) {
+    function s(v, l) { return '<div class="stat"><b>' + n(v) + "</b><span>" + l + "</span></div>"; }
+    return s(m.items, "Items") + s(m.kits, m.kits === 1 ? "Kit" : "Kits") + s(m.units, "Units owned") + s(m.categories, "Categories");
+  }
+
+  function renderStatus(st) {
+    var cur = st.current;
+    if (cur) {
+      $("#curSource").textContent = "Uploaded " + fmtDate(cur.generatedAt) + (cur.filename ? " from " + cur.filename : "") + ".";
+      $("#curStats").innerHTML = statsHtml(cur);
+    } else {
+      $("#curSource").textContent = "Nothing has been uploaded yet. The form is showing the sample list that came with the site.";
+      $("#curStats").innerHTML = "";
+    }
+    show($("#curStats"), !!cur);
+    show($("#restoreRow"), !!st.previous);
+    if (st.previous) $("#prevInfo").textContent = "Previous: " + n(st.previous.items) + " items, " + n(st.previous.kits) + " kits, uploaded " + fmtDate(st.previous.generatedAt) + ".";
+  }
+
+  function loadStatus() {
+    return api("status", {}).then(function (r) {
+      if (r.ok) renderStatus(r.data);
+      return r;
+    });
+  }
+
+  // ---- passcode ----
+  function unlock(code, quiet) {
+    pass = code;
+    show($("#unlock"), true);
+    $("#unlock").disabled = true;
+    return loadStatus().then(function (r) {
+      $("#unlock").disabled = false;
+      if (r.ok) {
+        try { sessionStorage.setItem("ghEquipPass", code); } catch (e) {}
+        show($("#lockCard"), false);
+        show($("#app"), true);
+      } else {
+        pass = "";
+        try { sessionStorage.removeItem("ghEquipPass"); } catch (e) {}
+        if (!quiet) say($("#lockError"), r.data.error || "Couldn't unlock.");
+      }
+    });
+  }
+  $("#lockForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    say($("#lockError"), "");
+    var code = $("#passcode").value;
+    if (!code) { say($("#lockError"), "Enter the passcode."); return; }
+    unlock(code, false);
+  });
+  try {
+    var saved = sessionStorage.getItem("ghEquipPass");
+    if (saved) unlock(saved, true);
+  } catch (e) {}
+
+  // ---- reading the file ----
+  function loadXlsx() {
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement("script");
+      s.src = XLSX_URL;
+      s.onload = function () { window.XLSX ? resolve(window.XLSX) : reject(new Error("x")); };
+      s.onerror = function () { reject(new Error("x")); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function fileToCsv(file) {
+    if (/\.xlsx?$/i.test(file.name)) {
+      return Promise.all([loadXlsx(), file.arrayBuffer()]).then(function (res) {
+        var wb = res[0].read(res[1], { type: "array" });
+        var name = wb.SheetNames[0];
+        if (!name) throw new Error("That Excel file has no sheets.");
+        return res[0].utils.sheet_to_csv(wb.Sheets[name]);
+      }, function () {
+        throw new Error("Couldn't read the Excel file. Save it as CSV and try again.");
+      });
+    }
+    return file.text();
+  }
+
+  function renderReview(d, filename) {
+    $("#revFile").textContent = "File: " + filename;
+    $("#newStats").innerHTML = statsHtml(d.next);
+    var w = $("#warnings");
+    w.innerHTML = "";
+    if (d.warnings && d.warnings.length) {
+      var box = document.createElement("div");
+      box.className = "callout";
+      var ul = document.createElement("ul");
+      ul.className = "warn";
+      d.warnings.forEach(function (t) { var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+      box.appendChild(ul);
+      w.appendChild(box);
+    }
+    var host = $("#diff");
+    host.innerHTML = "";
+    function section(title, count, lines) {
+      if (!count) return;
+      var det = document.createElement("details");
+      var sm = document.createElement("summary");
+      sm.textContent = title + " (" + n(count) + ")";
+      det.appendChild(sm);
+      var ul = document.createElement("ul");
+      lines.forEach(function (t) { var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+      if (count > lines.length) { var li = document.createElement("li"); li.className = "muted"; li.textContent = "and " + n(count - lines.length) + " more"; ul.appendChild(li); }
+      det.appendChild(ul);
+      host.appendChild(det);
+    }
+    if (!d.diff) {
+      var p = document.createElement("p");
+      p.className = "muted";
+      p.textContent = "This is the first upload. It replaces the sample list.";
+      host.appendChild(p);
+    } else {
+      var df = d.diff;
+      if (!df.addedCount && !df.removedCount && !df.changedCount) {
+        var p2 = document.createElement("p");
+        p2.className = "muted";
+        p2.textContent = "No differences from the list in use.";
+        host.appendChild(p2);
+      }
+      section("Added", df.addedCount, df.added);
+      section("Removed", df.removedCount, df.removed);
+      section("Quantity changed", df.changedCount, df.changed.map(function (c) { return c.name + ": " + c.from + " to " + c.to; }));
+    }
+  }
+
+  function reset() {
+    pending = null;
+    $("#file").value = "";
+    show($("#reviewCard"), false);
+    say($("#pubError"), "");
+  }
+
+  $("#file").addEventListener("change", function () {
+    var file = this.files && this.files[0];
+    say($("#fileError"), "");
+    show($("#doneBox"), false);
+    show($("#reviewCard"), false);
+    pending = null;
+    if (!file) return;
+    if (file.size > 3.5 * 1024 * 1024) { say($("#fileError"), "That file is too large (limit about 3.5 MB). Export only items, not history or logs."); return; }
+    show($("#working"), true);
+    fileToCsv(file).then(function (csv) {
+      return api("preview", { csv: csv, filename: file.name }).then(function (r) {
+        show($("#working"), false);
+        if (!r.ok) { say($("#fileError"), r.data.error || "Couldn't read that file."); return; }
+        pending = { csv: csv, filename: file.name };
+        renderReview(r.data, file.name);
+        show($("#reviewCard"), true);
+        $("#reviewCard").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }).catch(function (err) {
+      show($("#working"), false);
+      say($("#fileError"), err.message || "Couldn't read that file.");
+    });
+  });
+
+  $("#cancel").addEventListener("click", reset);
+
+  $("#publish").addEventListener("click", function () {
+    if (!pending) return;
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = "Publishing…";
+    say($("#pubError"), "");
+    api("publish", pending).then(function (r) {
+      btn.disabled = false;
+      btn.textContent = "Publish this list";
+      if (!r.ok) { say($("#pubError"), r.data.error || "Couldn't publish."); return; }
+      reset();
+      show($("#doneBox"), true);
+      loadStatus();
+      $("#doneBox").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  });
+
+  var armed = false;
+  $("#restore").addEventListener("click", function () {
+    var btn = this;
+    say($("#restoreError"), "");
+    if (!armed) {
+      armed = true;
+      btn.textContent = "Confirm: replace the list in use with the previous one";
+      setTimeout(function () { armed = false; btn.textContent = "Go back to the previous list"; }, 6000);
+      return;
+    }
+    armed = false;
+    btn.textContent = "Go back to the previous list";
+    api("restore", {}).then(function (r) {
+      if (!r.ok) { say($("#restoreError"), r.data.error || "Couldn't restore."); return; }
+      show($("#doneBox"), false);
+      loadStatus();
+    });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Equipment Request | Golden Hippo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gh-yellow-500: #edbf26;
+    --gh-yellow-400: #f3cf57;
+    --gh-yellow-600: #c99e0f;
+    --gh-yellow-100: #fdf4d4;
+    --gh-yellow-50: #fefaeb;
+    --gh-ink-900: #0f1115;
+    --gh-ink-700: #2a2f3a;
+    --gh-ink-500: #5b6373;
+    --gh-ink-300: #c5cad3;
+    --gh-ink-100: #eef0f4;
+    --gh-ink-50: #f7f8fa;
+    --gh-white: #ffffff;
+    --danger: #b42318;
+    --danger-50: #fef3f2;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--gh-ink-900);
+    background: var(--gh-ink-50);
+  }
+
+  .band { height: 6px; background: var(--gh-yellow-500); }
+  .site-header { background: var(--gh-ink-900); }
+  .site-header .inner {
+    max-width: 880px; margin: 0 auto; padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .site-header img { height: 48px; width: auto; display: block; }
+  .site-header .tag {
+    color: var(--gh-white); font-size: 12px; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase;
+  }
+
+  .container { max-width: 880px; margin: 0 auto; padding: 56px 20px 48px; }
+  h1 {
+    font-size: clamp(28px, 4vw, 38px); line-height: 1.15; letter-spacing: -.01em;
+    font-weight: 700; margin: 0 0 12px;
+  }
+  h2 { font-size: 20px; line-height: 1.3; font-weight: 600; margin: 0 0 4px; }
+  .lead { color: var(--gh-ink-700); margin: 0 0 40px; max-width: 62ch; }
+
+  .card {
+    background: var(--gh-white);
+    border: 1px solid var(--gh-ink-300);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 0 0 32px;
+    box-shadow: 0 1px 2px rgba(15, 17, 21, .04);
+  }
+  .hint { color: var(--gh-ink-500); font-size: 13px; margin: 0 0 16px; }
+  .sub-title { font-size: 13px; font-weight: 600; margin: 24px 0 8px; color: var(--gh-ink-700); }
+
+  .grid { display: grid; gap: 16px; }
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 640px) {
+    .grid.cols-3, .grid.cols-2 { grid-template-columns: 1fr; }
+    .container { padding-top: 40px; }
+  }
+
+  .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  .field .opt { color: var(--gh-ink-500); font-weight: 400; }
+  input[type=text], input[type=email], input[type=date], input[type=search],
+  input[type=number], select, textarea {
+    width: 100%; font: inherit; font-size: 15px; color: var(--gh-ink-900);
+    background: var(--gh-white); border: 1px solid var(--gh-ink-300);
+    border-radius: 8px; padding: 10px 12px; min-height: 44px;
+  }
+  textarea { min-height: 96px; resize: vertical; }
+  input:focus, select:focus, textarea:focus, button:focus-visible {
+    outline: none; border-color: var(--gh-ink-900);
+    box-shadow: 0 0 0 3px rgba(237, 191, 38, .45);
+  }
+
+  .btn {
+    font: inherit; font-weight: 600; font-size: 15px; line-height: 1.2;
+    border-radius: 8px; padding: 12px 20px; cursor: pointer;
+    border: 1px solid var(--gh-ink-300); background: var(--gh-white); color: var(--gh-ink-900);
+  }
+  .btn:hover { border-color: var(--gh-ink-500); }
+  .btn[disabled] { opacity: .55; cursor: default; }
+  .btn-primary { background: var(--gh-yellow-500); border-color: var(--gh-yellow-500); }
+  .btn-primary:hover { background: var(--gh-yellow-400); border-color: var(--gh-yellow-400); }
+  .btn-primary[disabled] { cursor: progress; }
+  .btn-sm { padding: 6px 12px; font-size: 13px; }
+  .btn-link {
+    background: none; border: 0; padding: 0; font: inherit; font-size: 13px; font-weight: 600;
+    color: var(--gh-ink-900); cursor: pointer;
+    text-decoration: underline; text-decoration-color: var(--gh-yellow-500);
+    text-decoration-thickness: 2px; text-underline-offset: 3px;
+  }
+  .btn-link:hover { text-decoration-thickness: 3px; }
+
+  /* Additional cinematographers */
+  .extra-row {
+    display: grid; gap: 12px; grid-template-columns: 1fr 1fr 1.4fr auto; align-items: end;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 640px) { .extra-row { grid-template-columns: 1fr; } }
+
+  /* Equipment picker */
+  .toolbar { display: grid; grid-template-columns: 1fr 220px; gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 640px) { .toolbar { grid-template-columns: 1fr; } }
+  .results {
+    border: 1px solid var(--gh-ink-300); border-radius: 8px;
+    max-height: 340px; overflow-y: auto; background: var(--gh-white);
+  }
+  .item, .sel {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 10px 14px; border-bottom: 1px solid var(--gh-ink-100);
+  }
+  .item:last-child, .sel:last-child { border-bottom: 0; }
+  .item-main { min-width: 0; }
+  .item-name { font-weight: 500; line-height: 1.35; }
+  .item-meta { font-size: 12px; color: var(--gh-ink-500); }
+  .item-side { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .avail { font-size: 12px; color: var(--gh-ink-500); white-space: nowrap; }
+  .badge {
+    display: inline-block; margin-left: 8px; padding: 1px 6px; vertical-align: middle;
+    font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    background: var(--gh-ink-100); color: var(--gh-ink-700); border-radius: 4px;
+  }
+  .empty { padding: 20px 14px; color: var(--gh-ink-500); font-size: 14px; }
+  .more { padding: 10px 14px; font-size: 12px; color: var(--gh-ink-500); background: var(--gh-ink-50); }
+  @media (max-width: 640px) {
+    .item, .sel { flex-wrap: wrap; }
+    .item-side { width: 100%; justify-content: space-between; }
+  }
+
+  .selected-box {
+    border: 1px solid var(--gh-ink-300); border-radius: 8px; background: var(--gh-white);
+  }
+  .qty { display: inline-flex; align-items: center; border: 1px solid var(--gh-ink-300); border-radius: 8px; overflow: hidden; }
+  .qty button {
+    width: 36px; height: 36px; border: 0; background: var(--gh-white); font: inherit;
+    font-size: 18px; cursor: pointer; color: var(--gh-ink-900);
+  }
+  .qty button:hover { background: var(--gh-ink-100); }
+  .qty input {
+    width: 54px; min-height: 36px; height: 36px; padding: 0; text-align: center;
+    border: 0; border-left: 1px solid var(--gh-ink-300); border-right: 1px solid var(--gh-ink-300);
+    border-radius: 0; -moz-appearance: textfield;
+  }
+  .qty input::-webkit-outer-spin-button, .qty input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .sel-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+  .errors {
+    border-left: 4px solid var(--danger); background: var(--danger-50);
+    border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 0 0 32px;
+  }
+  .errors strong { display: block; margin-bottom: 4px; }
+  .errors ul { margin: 0; padding-left: 20px; }
+  .errors:focus { outline: none; }
+
+  .submit-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .summary { color: var(--gh-ink-500); font-size: 14px; }
+
+  .callout {
+    border-left: 4px solid var(--gh-yellow-500); background: var(--gh-yellow-50);
+    padding: 20px 24px; border-radius: 0 8px 8px 0;
+  }
+  .callout h2 { margin-bottom: 8px; }
+  .callout p { margin: 0 0 16px; }
+
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  [hidden] { display: none !important; }
+
+  .done-actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0 8px; }
+  .done-actions .btn { text-decoration: none; display: inline-block; }
+  footer a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  footer { max-width: 880px; margin: 0 auto; padding: 0 20px 48px; color: var(--gh-ink-500); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="band"></div>
+<header class="site-header">
+  <div class="inner">
+    <img src="assets/logo-wordmark.webp" alt="Golden Hippo">
+    <span class="tag">Equipment request</span>
+  </div>
+</header>
+
+<main class="container">
+  <h1>Request equipment for your shoot</h1>
+  <p class="lead">Fill this out for each off-site shoot. We email you a PDF copy to post in Slack with your proposed dates.</p>
+
+  <form id="form" novalidate autocomplete="off">
+    <div id="errors" class="errors" role="alert" tabindex="-1" hidden></div>
+
+    <section class="card" aria-labelledby="h-project">
+      <h2 id="h-project">Project</h2>
+      <p class="hint">Optional, but it makes the request easier to find.</p>
+      <div class="field">
+        <label for="project">Project or shoot name <span class="opt">(optional)</span></label>
+        <input type="text" id="project" maxlength="120">
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-dates">
+      <h2 id="h-dates">Dates</h2>
+      <p class="hint">The shoot date has to fall between pick-up and return.</p>
+      <div class="grid cols-3">
+        <div class="field">
+          <label for="shootDate">Proposed shoot date</label>
+          <input type="date" id="shootDate">
+        </div>
+        <div class="field">
+          <label for="pickupDate">Pick-up date</label>
+          <input type="date" id="pickupDate">
+        </div>
+        <div class="field">
+          <label for="returnDate">Return date</label>
+          <input type="date" id="returnDate">
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-crew">
+      <h2 id="h-crew">Cinematographers</h2>
+      <p class="hint">The main cinematographer gets the PDF by email.</p>
+      <div class="grid cols-3">
+        <div class="field">
+          <label for="mainFirst">Main cinematographer first name</label>
+          <input type="text" id="mainFirst" maxlength="60" autocomplete="given-name">
+        </div>
+        <div class="field">
+          <label for="mainLast">Last name</label>
+          <input type="text" id="mainLast" maxlength="60" autocomplete="family-name">
+        </div>
+        <div class="field">
+          <label for="mainEmail">Golden Hippo email</label>
+          <input type="email" id="mainEmail" maxlength="120" placeholder="name@goldenhippo.com" autocomplete="email">
+        </div>
+      </div>
+
+      <p class="sub-title">Other cinematographers on this project <span class="opt" style="font-weight:400;color:var(--gh-ink-500)">(optional)</span></p>
+      <div id="extras"></div>
+      <button type="button" class="btn-link" id="addExtra">Add another cinematographer</button>
+    </section>
+
+    <section class="card" aria-labelledby="h-gear">
+      <h2 id="h-gear">Equipment</h2>
+      <p class="hint">Search the inventory, including kits, and add what you need. The number next to each item is how many we own. Kits are booked as a whole.</p>
+
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="Search by name, brand, model, or category" aria-label="Search equipment">
+        <select id="category" aria-label="Filter by category"><option value="">All categories</option></select>
+      </div>
+      <div id="results" class="results" role="list" aria-live="polite"></div>
+
+      <p class="sub-title" id="selectedTitle">Your list</p>
+      <div id="selected" class="selected-box" role="list"></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-notes">
+      <h2 id="h-notes">Notes</h2>
+      <p class="hint">Anything that isn't on the list, special setups, or things we should know.</p>
+      <div class="field">
+        <label for="notes">Notes <span class="opt">(optional)</span></label>
+        <textarea id="notes" maxlength="2000"></textarea>
+      </div>
+    </section>
+
+    <div class="hp" aria-hidden="true">
+      <label>Website <input type="text" id="website" tabindex="-1" autocomplete="off"></label>
+    </div>
+
+    <div class="submit-row">
+      <button type="submit" class="btn btn-primary" id="submit">Send request</button>
+      <span class="summary" id="summary" aria-live="polite"></span>
+    </div>
+  </form>
+
+  <section id="done" class="callout" role="status" hidden>
+    <h2 id="doneTitle">Request sent</h2>
+    <p id="doneBody"></p>
+    <div class="done-actions" id="doneActions" hidden>
+      <a class="btn btn-primary" id="dlPdf" href="#">Download PDF</a>
+      <a class="btn" id="openPdf" href="#" target="_blank" rel="noopener">Open to print</a>
+    </div>
+    <p class="hint" id="doneHint" hidden>Your copy is also in your email. Keep it handy for the Slack post.</p>
+    <button type="button" class="btn" id="again">Start another request</button>
+  </section>
+</main>
+
+<footer id="footer"><span id="footerText"></span> · <a id="updateLink" href="admin.html">Update equipment list</a></footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var DOMAIN = "goldenhippo.com";
+  var MAX_EXTRAS = 10;
+  var RESULT_LIMIT = 60;
+
+  var $ = function (sel) { return document.querySelector(sel); };
+  var esc = function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  };
+
+  var items = [];
+  var byId = {};
+  var selected = new Map(); // id -> qty (insertion order = order added)
+
+  // ---------- Dates ----------
+  function todayISO() {
+    var d = new Date();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+  ["shootDate", "pickupDate", "returnDate"].forEach(function (id) { $("#" + id).min = todayISO(); });
+  $("#pickupDate").addEventListener("change", function () {
+    var v = this.value || todayISO();
+    $("#shootDate").min = v;
+    $("#returnDate").min = v;
+  });
+
+  // ---------- Inventory ----------
+  function isKit(it) { return it.type === "kit"; }
+
+  function metaFor(it) {
+    if (isKit(it)) {
+      return "Includes " + it.contents.map(function (c) {
+        return c.qty > 1 ? c.name + " ×" + c.qty : c.name;
+      }).join(", ");
+    }
+    var cat = it.category + (it.subcategory ? " / " + it.subcategory : "");
+    return [cat, it.brand, it.model].filter(Boolean).join(" · ");
+  }
+
+  function nameHtml(it) {
+    return esc(it.name) + (isKit(it) ? ' <span class="badge">Kit</span>' : "");
+  }
+
+  function getJSON(url) {
+    return fetch(url, { cache: "no-cache" }).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    });
+  }
+
+  function loadInventory() {
+    return getJSON("/.netlify/functions/inventory")
+      .catch(function () { return getJSON("inventory.json"); })
+      .then(function (data) {
+        items = data.items || [];
+        items.forEach(function (it) {
+          byId[it.id] = it;
+          it._hay = [it.name, it.brand, it.model, it.category, it.subcategory,
+            isKit(it) ? "kit " + it.contents.map(function (c) { return c.name; }).join(" ") : ""].join(" ").toLowerCase();
+        });
+        var counts = {};
+        items.forEach(function (it) { counts[it.category] = (counts[it.category] || 0) + 1; });
+        var sel = $("#category");
+        Object.keys(counts).sort().forEach(function (c) {
+          var o = document.createElement("option");
+          o.value = c;
+          o.textContent = c + " (" + counts[c] + ")";
+          sel.appendChild(o);
+        });
+        var kitCount = items.filter(isKit).length;
+        var parts = ["Golden Hippo · Internal use · Equipment list: " + (items.length - kitCount) +
+          " items, " + kitCount + (kitCount === 1 ? " kit" : " kits")];
+        if (data.generatedAt) {
+          parts.push("updated " + new Date(data.generatedAt).toLocaleString("en-US",
+            { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }));
+        }
+        if (data.source === "bundled") parts.push("sample list, not updated yet");
+        if (data.stale || data.warning) parts.push("showing the last saved list");
+        $("#footerText").textContent = parts.join(" · ");
+        renderResults();
+      })
+      .catch(function () {
+        $("#results").innerHTML = '<div class="empty">Couldn’t load the equipment list. Refresh the page and try again.</div>';
+      });
+  }
+
+  function renderResults() {
+    var box = $("#results");
+    var scroll = box.scrollTop;
+    var tokens = $("#search").value.toLowerCase().split(/\s+/).filter(Boolean);
+    var cat = $("#category").value;
+    var list = items.filter(function (it) {
+      if (cat && it.category !== cat) return false;
+      return tokens.every(function (t) { return it._hay.indexOf(t) !== -1; });
+    });
+    if (!list.length) {
+      box.innerHTML = '<div class="empty">No equipment matches that search.</div>';
+      return;
+    }
+    var shown = list.slice(0, RESULT_LIMIT);
+    var html = shown.map(function (it) {
+      var inList = selected.has(it.id);
+      return '<div class="item" role="listitem">' +
+        '<div class="item-main"><div class="item-name">' + nameHtml(it) + '</div>' +
+        '<div class="item-meta">' + esc(metaFor(it)) + '</div></div>' +
+        '<div class="item-side"><span class="avail">' + (isKit(it) ? "Whole kit" : it.available + " in inventory") + '</span>' +
+        '<button type="button" class="btn btn-sm" data-add="' + esc(it.id) + '"' + (inList ? " disabled" : "") + '>' +
+        (inList ? "In list" : "Add") + '</button></div></div>';
+    }).join("");
+    if (list.length > shown.length) {
+      html += '<div class="more">Showing ' + shown.length + ' of ' + list.length + '. Keep typing or pick a category to narrow it down.</div>';
+    }
+    box.innerHTML = html;
+    box.scrollTop = scroll;
+  }
+
+  function renderSelected() {
+    var box = $("#selected");
+    var units = 0;
+    selected.forEach(function (q) { units += q; });
+    $("#selectedTitle").textContent = selected.size ? "Your list (" + selected.size + (selected.size === 1 ? " item" : " items") + ")" : "Your list";
+    $("#summary").textContent = selected.size ? selected.size + (selected.size === 1 ? " item, " : " items, ") + units + (units === 1 ? " unit" : " units") + " selected" : "";
+    if (!selected.size) {
+      box.innerHTML = '<div class="empty">Nothing added yet.</div>';
+      return;
+    }
+    var html = "";
+    selected.forEach(function (qty, id) {
+      var it = byId[id];
+      if (!it) return;
+      html += '<div class="sel" role="listitem" data-id="' + esc(id) + '">' +
+        '<div class="item-main"><div class="item-name">' + nameHtml(it) + '</div>' +
+        '<div class="item-meta">' + esc(metaFor(it)) + '</div></div>' +
+        '<div class="sel-actions">' +
+        (isKit(it) ? '<span class="avail">Whole kit</span>' : '<div class="qty">' +
+        '<button type="button" data-dec aria-label="Decrease quantity for ' + esc(it.name) + '">−</button>' +
+        '<input type="number" inputmode="numeric" min="1" max="' + it.available + '" value="' + qty + '" data-qty aria-label="Quantity for ' + esc(it.name) + '">' +
+        '<button type="button" data-inc aria-label="Increase quantity for ' + esc(it.name) + '">+</button>' +
+        '</div>') +
+        '<button type="button" class="btn btn-sm" data-remove>Remove</button>' +
+        '</div></div>';
+    });
+    box.innerHTML = html;
+  }
+
+  function setQty(id, value, inputEl) {
+    var it = byId[id];
+    var q = Math.max(1, Math.min(it.available, parseInt(value, 10) || 1));
+    selected.set(id, q);
+    if (inputEl) inputEl.value = q;
+    var units = 0;
+    selected.forEach(function (n) { units += n; });
+    $("#summary").textContent = selected.size + (selected.size === 1 ? " item, " : " items, ") + units + (units === 1 ? " unit" : " units") + " selected";
+  }
+
+  $("#search").addEventListener("input", renderResults);
+  $("#search").addEventListener("keydown", function (e) { if (e.key === "Enter") e.preventDefault(); });
+  $("#category").addEventListener("change", renderResults);
+
+  $("#results").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-add]");
+    if (!btn) return;
+    var id = btn.getAttribute("data-add");
+    if (!selected.has(id)) selected.set(id, 1);
+    renderSelected();
+    renderResults();
+  });
+
+  $("#selected").addEventListener("click", function (e) {
+    var row = e.target.closest(".sel");
+    if (!row) return;
+    var id = row.getAttribute("data-id");
+    var input = row.querySelector("[data-qty]");
+    if (e.target.closest("[data-inc]")) setQty(id, selected.get(id) + 1, input);
+    else if (e.target.closest("[data-dec]")) setQty(id, selected.get(id) - 1, input);
+    else if (e.target.closest("[data-remove]")) {
+      selected.delete(id);
+      renderSelected();
+      renderResults();
+    }
+  });
+  $("#selected").addEventListener("change", function (e) {
+    var input = e.target.closest("[data-qty]");
+    if (!input) return;
+    setQty(input.closest(".sel").getAttribute("data-id"), input.value, input);
+  });
+
+  // ---------- Additional cinematographers ----------
+  function addExtra() {
+    var wrap = $("#extras");
+    if (wrap.children.length >= MAX_EXTRAS) return;
+    var n = wrap.children.length + 1;
+    var row = document.createElement("div");
+    row.className = "extra-row";
+    row.innerHTML =
+      '<div class="field"><label>First name</label><input type="text" maxlength="60" data-f="first" aria-label="Cinematographer ' + n + ' first name"></div>' +
+      '<div class="field"><label>Last name</label><input type="text" maxlength="60" data-f="last" aria-label="Cinematographer ' + n + ' last name"></div>' +
+      '<div class="field"><label>Email <span class="opt">(optional)</span></label><input type="email" maxlength="120" data-f="email" placeholder="name@' + DOMAIN + '" aria-label="Cinematographer ' + n + ' email"></div>' +
+      '<button type="button" class="btn btn-sm" data-remove-extra>Remove</button>';
+    wrap.appendChild(row);
+    row.querySelector("input").focus();
+    $("#addExtra").hidden = wrap.children.length >= MAX_EXTRAS;
+  }
+  $("#addExtra").addEventListener("click", addExtra);
+  $("#extras").addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-remove-extra]");
+    if (!btn) return;
+    btn.closest(".extra-row").remove();
+    $("#addExtra").hidden = false;
+  });
+
+  // ---------- Form data and checks ----------
+  function val(id) { return $("#" + id).value.trim(); }
+
+  function gather() {
+    var extras = [].map.call($("#extras").children, function (row) {
+      var f = function (k) { return row.querySelector('[data-f="' + k + '"]').value.trim(); };
+      return { first: f("first"), last: f("last"), email: f("email") };
+    });
+    var list = [];
+    selected.forEach(function (qty, id) { list.push({ id: id, qty: qty }); });
+    return {
+      project: val("project"),
+      shootDate: val("shootDate"),
+      pickupDate: val("pickupDate"),
+      returnDate: val("returnDate"),
+      main: { first: val("mainFirst"), last: val("mainLast"), email: val("mainEmail") },
+      additional: extras,
+      items: list,
+      notes: val("notes"),
+      website: val("website")
+    };
+  }
+
+  var EMAIL_RE = /^[^\s@<>()\[\]",;:\\]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/;
+
+  function check(p) {
+    var errs = [];
+    if (!p.shootDate) errs.push("Proposed shoot date is required.");
+    if (!p.pickupDate) errs.push("Pick-up date is required.");
+    if (!p.returnDate) errs.push("Return date is required.");
+    if (p.pickupDate && p.pickupDate < todayISO()) errs.push("Pick-up date can’t be in the past.");
+    if (p.pickupDate && p.returnDate && p.returnDate < p.pickupDate) {
+      errs.push("Return date must be on or after the pick-up date.");
+    } else if (p.pickupDate && p.returnDate && p.shootDate && (p.shootDate < p.pickupDate || p.shootDate > p.returnDate)) {
+      errs.push("The proposed shoot date must fall between the pick-up and return dates.");
+    }
+    if (!p.main.first) errs.push("Main cinematographer first name is required.");
+    if (!p.main.last) errs.push("Main cinematographer last name is required.");
+    var email = p.main.email.toLowerCase();
+    if (!EMAIL_RE.test(email)) errs.push("Main cinematographer email: enter a valid email address.");
+    else if (email.slice(-(DOMAIN.length + 1)) !== "@" + DOMAIN) errs.push("Main cinematographer email must be a @" + DOMAIN + " address.");
+    p.additional.forEach(function (a, i) {
+      if (!a.first && !a.last && !a.email) return;
+      if (!a.first || !a.last) errs.push("Additional cinematographer " + (i + 1) + ": first and last name are required.");
+      if (a.email) {
+        var e = a.email.toLowerCase();
+        if (!EMAIL_RE.test(e)) errs.push("Additional cinematographer " + (i + 1) + ": enter a valid email address.");
+        else if (e.slice(-(DOMAIN.length + 1)) !== "@" + DOMAIN) errs.push("Additional cinematographer " + (i + 1) + ": use a @" + DOMAIN + " email address.");
+      }
+    });
+    if (!p.items.length) errs.push("Add at least one piece of equipment.");
+    return errs;
+  }
+
+  function showErrors(list) {
+    var box = $("#errors");
+    box.innerHTML = "<strong>Please fix the following:</strong><ul>" +
+      list.map(function (m) { return "<li>" + esc(m) + "</li>"; }).join("") + "</ul>";
+    box.hidden = false;
+    box.scrollIntoView({ behavior: "smooth", block: "start" });
+    box.focus({ preventScroll: true });
+  }
+
+  // ---------- Submit ----------
+  $("#form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    $("#errors").hidden = true;
+    var p = gather();
+    var errs = check(p);
+    if (errs.length) { showErrors(errs); return; }
+
+    var btn = $("#submit");
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+
+    fetch("/.netlify/functions/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(p)
+    })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) { return { ok: res.ok, data: data }; });
+      })
+      .then(function (r) {
+        if (!r.ok) {
+          showErrors(r.data.errors && r.data.errors.length ? r.data.errors : [r.data.error || "Something went wrong. Try again."]);
+          return;
+        }
+        $("#form").hidden = true;
+        $("#doneTitle").textContent = r.data.ref ? "Request " + r.data.ref + " sent" : "Request sent";
+        $("#doneBody").textContent = r.data.sentTo
+          ? "We emailed a PDF copy to " + r.data.sentTo + ". Post it in the equipment Slack channel with your proposed dates so they can be approved."
+          : "Your request was submitted.";
+        setupPdf(r.data);
+        $("#done").hidden = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      })
+      .catch(function () {
+        showErrors(["Couldn’t reach the server. Check your connection and try again."]);
+      })
+      .then(function () {
+        btn.disabled = false;
+        btn.textContent = "Send request";
+      });
+  });
+
+  // The server sends the same PDF it emailed, so the person can save or print it straight away.
+  function setupPdf(data) {
+    if (!data.pdf) return;
+    try {
+      var bin = atob(data.pdf), bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      var url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      var dl = $("#dlPdf");
+      dl.href = url;
+      dl.setAttribute("download", data.filename || "equipment-request.pdf");
+      $("#openPdf").href = url;
+      $("#doneActions").hidden = false;
+      $("#doneHint").hidden = false;
+    } catch (e) { /* the emailed copy still works */ }
+  }
+
+  $("#again").addEventListener("click", function () { window.location.reload(); });
+
+  // ---------- Init ----------
+  renderSelected();
+  loadInventory();
+})();
+</script>
+</body>
+</html>
