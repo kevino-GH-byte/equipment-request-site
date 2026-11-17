@@ -20,7 +20,12 @@ const ALIASES = {
   code: ["code", "assetid", "assetcode", "barcode", "tag"],
   status: ["status"],
   kit: ["kitname", "kit"],
+  quantity: ["quantity", "qty"],
+  id: ["id", "itemid"],
+  retired: ["retired", "retireddate"],
 };
+// Columns of CheqRoom's separate kits export.
+const KIT_ALIASES = { name: ["name", "kitname"], status: ["status"], items: ["items", "itemids"] };
 const EXCLUDED_STATUS = /(retired|lost|archiv|stolen|sold|dispos)/i;
 
 const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -41,25 +46,21 @@ const hash = (s) => {
 const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" });
 
-/** Returns { items, stats }. Throws an Error with a readable message if the sheet can't be used. */
-function buildInventory(input) {
+function readCsv(input, what) {
   let rows;
   try {
-    rows = parse(input, {
-      columns: true,
-      skip_empty_lines: true,
-      bom: true,
-      trim: true,
-      relax_column_count: true,
-    });
+    rows = parse(input, { columns: true, skip_empty_lines: true, bom: true, trim: true, relax_column_count: true });
   } catch (err) {
-    throw new Error(`could not read the CSV (${err.message}).`);
+    throw new Error(`could not read the ${what} (${err.message}).`);
   }
-  if (!rows.length) throw new Error("the CSV has no rows.");
+  if (!rows.length) throw new Error(`the ${what} has no rows.`);
+  return rows;
+}
 
+function findColumns(rows, aliasMap) {
   const headers = Object.keys(rows[0]);
   const col = {};
-  for (const [field, aliases] of Object.entries(ALIASES)) {
+  for (const [field, aliases] of Object.entries(aliasMap)) {
     for (const alias of aliases) {
       const header = headers.find((h) => norm(h) === alias);
       if (header) {
@@ -68,18 +69,31 @@ function buildInventory(input) {
       }
     }
   }
+  return { col, headers };
+}
+
+/**
+ * Returns { items, stats }. Throws an Error with a readable message if the sheet can't be used.
+ * `input` is the items CSV. `opts.kitsCsv` is CheqRoom's optional separate kits export; it lists
+ * each kit's items by Id, and is matched against the Id column of the items export.
+ */
+function buildInventory(input, opts = {}) {
+  const rows = readCsv(input, "CSV");
+  const { col, headers } = findColumns(rows, ALIASES);
   if (!col.name && !col.brand && !col.model) {
     throw new Error(`no Name column found. Headers in the file: ${headers.join(", ")}`);
   }
 
   const groups = new Map();
   const kits = new Map();
+  const byId = new Map(); // item Id -> { key, name, qty }
+  const inKit = new Set(); // `${kitKey}|${id}` already counted from the items export
   let skipped = 0;
 
   for (const row of rows) {
     const get = (field) => (col[field] ? String(row[col[field]] ?? "").trim() : "");
 
-    if (EXCLUDED_STATUS.test(get("status"))) {
+    if (EXCLUDED_STATUS.test(get("status")) || get("retired")) {
       skipped++;
       continue;
     }
@@ -100,10 +114,12 @@ function buildInventory(input) {
     const category = capitalize(parts[0] || "Other");
     const subcategory = parts.slice(1).join(" / ");
 
+    // Bulk items (rolls, corners) carry a Quantity; everything else is one unit per row.
+    const qty = Math.min(999, Math.max(1, parseInt(get("quantity"), 10) || 1));
     const key = [name, category, brand, model].map((s) => s.toLowerCase()).join("|");
     const existing = groups.get(key);
     if (existing) {
-      existing.available += 1;
+      existing.available += qty;
     } else {
       groups.set(key, {
         id: `${slug(name)}-${hash(key)}`,
@@ -112,18 +128,50 @@ function buildInventory(input) {
         subcategory,
         brand,
         model,
-        available: 1,
+        available: qty,
       });
     }
+    if (get("id")) byId.set(get("id"), { key, name, qty });
 
     const kitName = get("kit");
     if (kitName) {
-      const kitKey = kitName.toLowerCase();
+      const kitKey = kitName; // exact name: CheqRoom can hold kits that differ only by case
       const kit = kits.get(kitKey) || { name: kitName, members: new Map() };
       const member = kit.members.get(key) || { name, qty: 0 };
-      member.qty += 1;
+      member.qty += qty;
       kit.members.set(key, member);
       kits.set(kitKey, kit);
+      if (get("id")) inKit.add(`${kitKey}|${get("id")}`);
+    }
+  }
+
+  // Optional separate kits export: add anything the items export's Kit column didn't already say.
+  let kitsFile = null;
+  if (opts.kitsCsv) {
+    const krows = readCsv(opts.kitsCsv, "kits CSV");
+    const { col: kcol } = findColumns(krows, KIT_ALIASES);
+    if (!kcol.name || !kcol.items) throw new Error("the kits file needs name and items columns.");
+    kitsFile = { rows: krows.length, unresolved: 0, incomplete: [] };
+    for (const krow of krows) {
+      const kitName = String(krow[kcol.name] || "").trim();
+      const kstatus = kcol.status ? String(krow[kcol.status] || "") : "";
+      if (!kitName || EXCLUDED_STATUS.test(kstatus)) continue;
+      if (/incomplete/i.test(kstatus)) kitsFile.incomplete.push(kitName);
+      const kitKey = kitName; // exact name: CheqRoom can hold kits that differ only by case
+      for (const id of String(krow[kcol.items] || "").split(/[,;\s]+/).filter(Boolean)) {
+        const found = byId.get(id);
+        if (!found) {
+          kitsFile.unresolved += 1;
+          continue;
+        }
+        if (inKit.has(`${kitKey}|${id}`)) continue;
+        inKit.add(`${kitKey}|${id}`);
+        const kit = kits.get(kitKey) || { name: kitName, members: new Map() };
+        const member = kit.members.get(found.key) || { name: found.name, qty: 0 };
+        member.qty += found.qty;
+        kit.members.set(found.key, member);
+        kits.set(kitKey, kit);
+      }
     }
   }
 
@@ -155,6 +203,7 @@ function buildInventory(input) {
       units: [...groups.values()].reduce((n, it) => n + it.available, 0),
       lines: groups.size,
       columns: col,
+      kitsFile,
     },
   };
 }

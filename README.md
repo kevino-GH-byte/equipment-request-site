@@ -28,14 +28,14 @@ There is no database to run. The equipment list is uploaded on a passcode-protec
 
 In Netlify, add the environment variable `ADMIN_PASSCODE` (a long phrase, shared only with the coordinator and equipment manager), then redeploy once. Whoever knows it can update the list, and nobody else can. To change who has access, change the passcode and redeploy. Five wrong guesses lock the page for 15 minutes.
 
-### 2. How columns are read
+### 2. How the CheqRoom exports are read
 
-Columns are matched by header name, ignoring case and spacing: `Name` (or `Item`, `Asset`), `Category`, `Brand`, `Model`, `Code`, `Status`, and `Kit Name` (or `Kit`). Only a name, or a brand and model, is required.
+Export **Items** from CheqRoom (CSV or Excel). You can add the separate **Kits** export too by choosing both files together, but the items export is enough: its `Kit` column names the kit each item belongs to. Columns are matched by header name, ignoring case and spacing: `Name`, `Category`, `Brand`, `Model`, `Status`, `Quantity`, `Kit` (or `Kit Name`), `Id`, `Retired`. Only a name, or a brand and model, is required. Everything else in the export, including who has an item checked out and photo links, is dropped in the browser before upload.
 
-- Identical items (same name, category, brand, and model) are grouped into one line with a unit count. That count is the most a requester can ask for.
-- Rows whose status contains retired, lost, archived, stolen, sold, or disposed are skipped.
-- CheqRoom sub-categories written as `Lens/Zoom>24-70mm` show as the category "Lens" with "Zoom / 24-70mm" under the item.
-- **Kits:** items that share a `Kit Name` become one kit. Kits show first in the list with a Kit label, are searchable by kit name and by what's inside, and can only be requested whole. The PDF lists what each kit contains. CheqRoom's help pages describe kits being assigned through a Kit Name column on import. Check that your export includes that column.
+- Identical items (same name, category, brand, and model) are grouped into one line with a unit count. That count is the most a requester can ask for. Bulk items use their `Quantity`.
+- Rows with a retired date, or a status containing retired, lost, archived, stolen, sold, or disposed, are skipped. Items that are checked out or unavailable are still listed, since the dates may be weeks away.
+- CheqRoom categories written as `Grip Gear / Stands` show as the category "Grip Gear" with "Stands" under the item.
+- **Kits:** items that share a kit name become one kit. Kits show first with a Kit label, are searchable by kit name and by what's inside, and can only be requested whole. The PDF lists what each kit contains. If you add the kits export, items it lists that aren't in the items export (usually retired) are reported and left out. Kits whose names differ only by capitalization stay separate, as in CheqRoom.
 
 ### 3. Deploy
 
@@ -59,9 +59,9 @@ Set these in Netlify under Site configuration, Environment variables:
 
 ## Updating the equipment list (for the coordinator)
 
-1. Export items from CheqRoom (CSV or Excel).
+1. Export items from CheqRoom (CSV or Excel). The kits export is optional.
 2. Open the request form and click **Update equipment list** in the footer (or go to `/admin.html`).
-3. Enter the passcode and choose the file.
+3. Enter the passcode and choose the file (or both files, holding Ctrl or Cmd to pick two).
 4. Review the summary: counts, warnings, and what was added, removed, or changed in quantity.
 5. Click **Publish this list**. The form uses it within about 20 seconds.
 

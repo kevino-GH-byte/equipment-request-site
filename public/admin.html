@@ -118,14 +118,15 @@
       <h2 id="upTitle">Upload a new export</h2>
       <p class="hint">Replaces the whole list. Include every item, not just what changed.</p>
       <ol class="steps">
-        <li>Export your items from CheqRoom as a CSV or Excel file.</li>
-        <li>Make sure the columns include Name, Category, and Kit Name (if you use kits). Brand, Model, Code, and Status are used if present.</li>
-        <li>Choose the file below. You'll review it before it goes live.</li>
+        <li>In CheqRoom, export your <strong>Items</strong>. If you also export <strong>Kits</strong>, you can add that file too, but kits are read from the items export either way.</li>
+        <li>Choose the file or files below. To pick two, hold Ctrl (or Cmd on a Mac) while clicking. CSV or Excel both work.</li>
+        <li>You'll see a summary and what changed before anything goes live.</li>
       </ol>
-      <label for="file">Export file (.csv or .xlsx)</label>
-      <input id="file" type="file" accept=".csv,.xlsx,.xls,text/csv">
+      <label for="file">Export files (.csv or .xlsx)</label>
+      <input id="file" type="file" multiple accept=".csv,.xlsx,.xls,text/csv">
       <div class="callout error" id="fileError" role="alert" hidden><p></p></div>
       <p class="muted" id="working" role="status" hidden>Reading the file…</p>
+      <p class="muted">Only the columns the request form needs are sent (names, categories, kits, quantities). Customer details and photo links in the export are dropped in your browser first.</p>
     </section>
 
     <section class="card" id="reviewCard" aria-labelledby="revTitle" hidden>
@@ -250,18 +251,44 @@
     });
   }
 
-  function fileToCsv(file) {
-    if (/\.xlsx?$/i.test(file.name)) {
-      return Promise.all([loadXlsx(), file.arrayBuffer()]).then(function (res) {
-        var wb = res[0].read(res[1], { type: "array" });
-        var name = wb.SheetNames[0];
-        if (!name) throw new Error("That Excel file has no sheets.");
-        return res[0].utils.sheet_to_csv(wb.Sheets[name]);
-      }, function () {
-        throw new Error("Couldn't read the Excel file. Save it as CSV and try again.");
-      });
-    }
-    return file.text();
+  // Only these columns are uploaded. Everything else in a CheqRoom export (who has an item
+  // checked out, photo links, prices) is dropped in the browser before anything is sent.
+  var KEEP = ["name","itemname","item","assetname","asset","title","category","categories","type",
+    "brand","make","manufacturer","model","modelnumber","code","assetid","assetcode","status",
+    "kitname","kit","quantity","qty","id","itemid","retired","retireddate","items","itemids"];
+  var NAME_ALTERNATES = ["itemname","item","assetname","asset","title"];
+  function norm(x) { return String(x == null ? "" : x).toLowerCase().replace(/[^a-z0-9]/g, ""); }
+  function csvCell(v) {
+    v = String(v == null ? "" : v);
+    return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+
+  function readRows(file) {
+    var isText = /\.(csv|tsv|txt)$/i.test(file.name);
+    return Promise.all([loadXlsx(), isText ? file.text() : file.arrayBuffer()]).then(function (res) {
+      var wb = isText ? res[0].read(res[1], { type: "string" }) : res[0].read(res[1], { type: "array" });
+      var name = wb.SheetNames[0];
+      if (!name) throw new Error("That file has no sheets.");
+      return res[0].utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: true, defval: "" });
+    }, function () {
+      throw new Error("Couldn't load the spreadsheet reader. Check your connection and try again.");
+    });
+  }
+
+  // "kits" is CheqRoom's kit export (name + a list of item ids); everything else is items.
+  function classify(rows) {
+    var h = (rows[0] || []).map(norm);
+    var has = function (x) { return h.indexOf(x) > -1; };
+    return has("name") && (has("items") || has("itemids")) && !has("category") ? "kits" : "items";
+  }
+
+  function slim(rows) {
+    var h = (rows[0] || []).map(norm);
+    var drop = h.indexOf("name") > -1 ? NAME_ALTERNATES : [];
+    var idx = [];
+    h.forEach(function (x, i) { if (KEEP.indexOf(x) > -1 && drop.indexOf(x) < 0) idx.push(i); });
+    return rows.filter(function (r, i) { return i === 0 || r.some(function (c) { return String(c).trim() !== ""; }); })
+      .map(function (r) { return idx.map(function (i) { return csvCell(r[i]); }).join(","); }).join("\n");
   }
 
   function renderReview(d, filename) {
@@ -318,28 +345,38 @@
     say($("#pubError"), "");
   }
 
+  function fail(msg) { show($("#working"), false); say($("#fileError"), msg); }
+
   $("#file").addEventListener("change", function () {
-    var file = this.files && this.files[0];
+    var files = Array.prototype.slice.call(this.files || []);
     say($("#fileError"), "");
     show($("#doneBox"), false);
     show($("#reviewCard"), false);
     pending = null;
-    if (!file) return;
-    if (file.size > 3.5 * 1024 * 1024) { say($("#fileError"), "That file is too large (limit about 3.5 MB). Export only items, not history or logs."); return; }
+    if (!files.length) return;
+    if (files.length > 2) { fail("Choose at most two files: the items export and, if you have it, the kits export."); return; }
+    if (files.some(function (f) { return f.size > 15 * 1024 * 1024; })) { fail("One of those files is larger than 15 MB. Export only items and kits, not history or logs."); return; }
     show($("#working"), true);
-    fileToCsv(file).then(function (csv) {
-      return api("preview", { csv: csv, filename: file.name }).then(function (r) {
+    Promise.all(files.map(function (f) {
+      return readRows(f).then(function (rows) { return { rows: rows, kind: classify(rows) }; });
+    })).then(function (parts) {
+      var items = parts.filter(function (p) { return p.kind === "items"; });
+      var kits = parts.filter(function (p) { return p.kind === "kits"; });
+      if (!items.length) { fail("That looks like the kits export. Add the items export too (you can choose both files together)."); return; }
+      if (items.length > 1) { fail("Both files look like item exports. Choose one items file, and optionally one kits file."); return; }
+      var csv = slim(items[0].rows);
+      var kitsCsv = kits.length ? slim(kits[0].rows) : "";
+      if (csv.length + kitsCsv.length > 3.5 * 1024 * 1024) { fail("That export is too large to upload even after trimming. Contact the site owner."); return; }
+      var filename = files.map(function (f) { return f.name; }).join(" and ");
+      return api("preview", { csv: csv, kitsCsv: kitsCsv, filename: filename }).then(function (r) {
         show($("#working"), false);
         if (!r.ok) { say($("#fileError"), r.data.error || "Couldn't read that file."); return; }
-        pending = { csv: csv, filename: file.name };
-        renderReview(r.data, file.name);
+        pending = { csv: csv, kitsCsv: kitsCsv, filename: filename };
+        renderReview(r.data, filename);
         show($("#reviewCard"), true);
         $("#reviewCard").scrollIntoView({ behavior: "smooth", block: "start" });
       });
-    }).catch(function (err) {
-      show($("#working"), false);
-      say($("#fileError"), err.message || "Couldn't read that file.");
-    });
+    }).catch(function (err) { fail(err.message || "Couldn't read that file."); });
   });
 
   $("#cancel").addEventListener("click", reset);

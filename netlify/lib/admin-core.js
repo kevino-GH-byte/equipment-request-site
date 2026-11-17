@@ -52,10 +52,18 @@ function diff(oldItems, newItems) {
 function warningsFor(built, baseline) {
   const out = [];
   const { stats, items } = built;
-  if (!stats.columns.kit) {
-    out.push("No Kit Name column was found, so no kits will appear. If you use kits, check that the export includes that column.");
+  if (!stats.columns.kit && !stats.kitsFile) {
+    out.push("No Kit column was found, so no kits will appear. If you use kits, check that the export includes that column, or add the separate kits export.");
   } else if (!stats.kits) {
-    out.push("There is a Kit Name column but nothing is filled in, so no kits will appear.");
+    out.push("There is a Kit column but nothing is filled in, so no kits will appear.");
+  }
+  if (stats.kitsFile && stats.kitsFile.unresolved) {
+    const n = stats.kitsFile.unresolved;
+    out.push(`${n} item${n === 1 ? "" : "s"} listed inside kits ${n === 1 ? "isn't" : "aren't"} in the items export (likely retired), so ${n === 1 ? "it is" : "they are"} left out of the kits.`);
+  }
+  if (stats.kitsFile && stats.kitsFile.incomplete.length) {
+    const n = stats.kitsFile.incomplete.length;
+    out.push(`${n} kit${n === 1 ? " is" : "s are"} marked incomplete in CheqRoom. ${n === 1 ? "It is" : "They are"} still listed.`);
   }
   if (!stats.columns.category) {
     out.push("No Category column was found. Every item will be listed under Other.");
@@ -77,9 +85,9 @@ function warningsFor(built, baseline) {
   return out;
 }
 
-function build(csv) {
+function build(csv, kitsCsv) {
   if (typeof csv !== "string" || !csv.trim()) throw new Error("The file is empty.");
-  return buildInventory(csv);
+  return buildInventory(csv, { kitsCsv: typeof kitsCsv === "string" && kitsCsv.trim() ? kitsCsv : null });
 }
 
 /** Returns { status, data }. */
@@ -94,7 +102,7 @@ async function run(action, body, store) {
   if (action === "preview" || action === "publish") {
     let built;
     try {
-      built = build(body && body.csv);
+      built = build(body && body.csv, body && body.kitsCsv);
     } catch (err) {
       return { status: 400, data: { error: `Couldn't use that file: ${err.message}` } };
     }
