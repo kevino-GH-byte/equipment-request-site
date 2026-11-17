@@ -67,7 +67,10 @@ exports.handler = async (event) => {
     if (result.status === 200 && (body.action === "publish" || body.action === "restore")) clearCache();
     return json(result.status, result.data);
   } catch (err) {
-    console.error("Update page request failed:", err);
-    return json(500, { error: "Something went wrong saving the list. Try again." });
+    console.error("Update page request failed:", err && err.name, err && err.message);
+    if (err && err.name === "MissingBlobsEnvironmentError") {
+      return json(500, { error: "Storage isn't connected to this site (Netlify Blobs). See the README section on storage, or add BLOBS_SITE_ID and BLOBS_TOKEN." });
+    }
+    return json(500, { error: `Something went wrong saving the list (${(err && err.name) || "error"}). Try again, and check the function log in Netlify if it keeps happening.` });
   }
 };

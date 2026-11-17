@@ -40,12 +40,32 @@ function getListStore(event) {
   if (dir) return fileStore(dir);
 
   const blobs = require("@netlify/blobs");
-  if (event && event.blobs) blobs.connectLambda(event);
-  const store = blobs.getStore({ name: "equipment-list", consistency: "strong" });
+  // Normally Netlify supplies the connection details with each request. If that ever isn't the
+  // case, BLOBS_SITE_ID and BLOBS_TOKEN (a Netlify personal access token) connect it by hand.
+  const manual = process.env.BLOBS_SITE_ID && process.env.BLOBS_TOKEN
+    ? { siteID: process.env.BLOBS_SITE_ID.trim(), token: process.env.BLOBS_TOKEN.trim() }
+    : {};
+  if (!manual.siteID && event && event.blobs) blobs.connectLambda(event);
+  const strong = blobs.getStore({ name: "equipment-list", consistency: "strong", ...manual });
+  const eventual = blobs.getStore({ name: "equipment-list", ...manual });
+  // Reads right after a write should see the new value ("strong"). Some Netlify setups don't
+  // support that and throw BlobsConsistencyError; then fall back to normal reads, which can lag
+  // behind a write by up to a minute.
+  let strongWorks = true;
   return {
-    get: (key) => store.get(key, { type: "json" }),
-    set: (key, value) => store.setJSON(key, value),
-    delete: (key) => store.delete(key),
+    async get(key) {
+      if (strongWorks) {
+        try {
+          return await strong.get(key, { type: "json" });
+        } catch (err) {
+          if (!err || err.name !== "BlobsConsistencyError") throw err;
+          strongWorks = false;
+        }
+      }
+      return eventual.get(key, { type: "json" });
+    },
+    set: (key, value) => eventual.setJSON(key, value),
+    delete: (key) => eventual.delete(key),
   };
 }
 

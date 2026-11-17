@@ -356,7 +356,7 @@
       if (!r.ok) { say($("#pubError"), r.data.error || "Couldn't publish."); return; }
       reset();
       show($("#doneBox"), true);
-      loadStatus();
+      renderStatus(r.data);
       $("#doneBox").scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
   });
@@ -376,7 +376,7 @@
     api("restore", {}).then(function (r) {
       if (!r.ok) { say($("#restoreError"), r.data.error || "Couldn't restore."); return; }
       show($("#doneBox"), false);
-      loadStatus();
+      renderStatus(r.data);
     });
   });
 })();
