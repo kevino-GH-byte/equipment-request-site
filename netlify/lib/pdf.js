@@ -251,7 +251,7 @@ async function buildPdf(d) {
   newPage(true);
 
   para("Equipment request", { font: bold, size: 24, lh: 30 });
-  para(`Reference ${d.ref}   |   Submitted ${fmtTimestamp(d.submittedAt)}`, {
+  para(`Reference ${d.ref}${d.revision > 1 ? ` (revision ${d.revision})` : ""}   |   ${d.revision > 1 ? "Updated" : "Submitted"} ${fmtTimestamp(d.submittedAt)}`, {
     size: 10,
     color: C.ink500,
     gap: 16,

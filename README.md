@@ -89,5 +89,6 @@ LIST_STORE_DIR=./.list-store ADMIN_PASSCODE=test node <your test server>
 - Anyone with the form link can submit a request. The main cinematographer's address must be `@goldenhippo.com` and a hidden field catches basic bots, but the form has no login. If that matters, put the site behind Netlify's password protection or your SSO.
 - The "in inventory" number is how many units you own, not availability on the requested dates. Your equipment manager still checks availability in CheqRoom.
 - Items inside a kit also appear on their own, because CheqRoom allows booking them separately. A request can include both a kit and one of its parts. The equipment manager sorts that out.
+- **Fixing a mistake:** the confirmation page has an **Edit this request** button. It brings the form back with everything filled in; sending it again makes a new PDF with the same reference number, marked "revision 2" and so on. Only the page that is still open can do this, since requests aren't stored.
 - Nothing is emailed or stored. The PDF exists only on the confirmation page, so a requester who closes it without saving has to submit again. Requests aren't logged anywhere.
 - The PDF uses a standard font, so characters outside Latin-1 (emoji, non-Latin scripts) print as `?`.

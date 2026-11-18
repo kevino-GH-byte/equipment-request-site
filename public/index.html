@@ -203,6 +203,9 @@
 
   <form id="form" novalidate autocomplete="off">
     <div id="errors" class="errors" role="alert" tabindex="-1" hidden></div>
+    <div id="editBanner" class="callout" hidden>
+      <p><strong>Editing request <span id="editRef"></span>.</strong> Change anything below, then click Update PDF. The earlier PDF is out of date once you do, so post the new one in Slack.</p>
+    </div>
 
     <section class="card" aria-labelledby="h-project">
       <h2 id="h-project">Project</h2>
@@ -295,8 +298,11 @@
       <a class="btn btn-primary" id="dlPdf" href="#">Download PDF</a>
       <a class="btn" id="openPdf" href="#" target="_blank" rel="noopener">Open to print</a>
     </div>
-    <p class="hint" id="doneHint" hidden>Save it now. This page is the only place you get the PDF.</p>
-    <button type="button" class="btn" id="again">Start another request</button>
+    <p class="hint" id="doneHint" hidden>Save it now. This page is the only place you get the PDF. Spotted a mistake? Use Edit this request to fix it and get a new PDF.</p>
+    <div class="done-actions">
+      <button type="button" class="btn" id="edit">Edit this request</button>
+      <button type="button" class="btn" id="again">Start another request</button>
+    </div>
   </section>
 </main>
 
@@ -590,10 +596,11 @@
     var p = gather();
     var errs = check(p);
     if (errs.length) { showErrors(errs); return; }
+    if (current.ref) { p.ref = current.ref; p.revision = current.revision + 1; }
 
     var btn = $("#submit");
     btn.disabled = true;
-    btn.textContent = "Sending…";
+    btn.textContent = current.ref ? "Updating…" : "Sending…";
 
     fetch("/.netlify/functions/submit", {
       method: "POST",
@@ -609,7 +616,9 @@
           return;
         }
         $("#form").hidden = true;
-        $("#doneTitle").textContent = r.data.ref ? "Request " + r.data.ref + " is ready" : "Request is ready";
+        current.ref = r.data.ref || current.ref;
+        current.revision = r.data.revision || 1;
+        $("#doneTitle").textContent = r.data.ref ? "Request " + r.data.ref + (current.revision > 1 ? " is updated" : " is ready") : "Request is ready";
         $("#doneBody").textContent = "Download the PDF below, then post it in the equipment Slack channel with your proposed dates so they can be approved.";
         setupPdf(r.data);
         $("#done").hidden = false;
@@ -620,8 +629,22 @@
       })
       .then(function () {
         btn.disabled = false;
-        btn.textContent = "Send request";
+        btn.textContent = current.ref ? "Update PDF" : "Send request";
       });
+  });
+
+  // Editing keeps everything typed so far, re-sends with the same reference, and swaps the PDF.
+  var current = { ref: null, revision: 0, url: null };
+  $("#edit").addEventListener("click", function () {
+    $("#done").hidden = true;
+    $("#doneActions").hidden = true;
+    $("#doneHint").hidden = true;
+    if (current.url) { URL.revokeObjectURL(current.url); current.url = null; }
+    $("#editRef").textContent = current.ref || "";
+    $("#editBanner").hidden = false;
+    $("#submit").textContent = "Update PDF";
+    $("#form").hidden = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
   // The server builds the PDF and sends it back so the person can save or print it right away.
@@ -633,7 +656,9 @@
     try {
       var bin = atob(data.pdf), bytes = new Uint8Array(bin.length);
       for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      if (current.url) URL.revokeObjectURL(current.url);
       var url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      current.url = url;
       var dl = $("#dlPdf");
       dl.href = url;
       dl.setAttribute("download", data.filename || "equipment-request.pdf");

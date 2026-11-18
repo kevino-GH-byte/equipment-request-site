@@ -50,9 +50,12 @@ exports.handler = async (event) => {
   }
 
   try {
-    const data = { ...clean, ref: makeRef(), submittedAt: new Date() };
+    // Editing a request re-sends the form with its earlier reference, so the new PDF replaces the old one.
+    const ref = payload && typeof payload.ref === "string" && /^ER-\d{8}-[A-Z0-9]{4}$/.test(payload.ref) ? payload.ref : makeRef();
+    const rev = payload && Number.isInteger(payload.revision) && payload.revision > 1 && payload.revision <= 50 ? payload.revision : 1;
+    const data = { ...clean, ref, revision: rev, submittedAt: new Date() };
     const pdf = await buildPdf(data);
-    return json(200, { ok: true, ref: data.ref, filename: `${data.ref}.pdf`, pdf: pdf.toString("base64") });
+    return json(200, { ok: true, ref: data.ref, revision: rev, filename: rev > 1 ? `${data.ref}-rev${rev}.pdf` : `${data.ref}.pdf`, pdf: pdf.toString("base64") });
   } catch (err) {
     console.error("Request failed:", err);
     return json(500, { error: "We couldn't create the PDF. Try again, or let the equipment team know." });
